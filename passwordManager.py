@@ -2,6 +2,23 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw
 import bcrypt
+import os
+import sys
+
+# Función para obtener la ruta del directorio
+def resource_path(relative_path):
+    """Obtiene la ruta absoluta al recurso, funciona tanto en desarrollo como en el ejecutable."""
+    try:
+        # PyInstaller crea una carpeta temporal y guarda el path en _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# Carga la imagen y el archivo de contraseñas usando la función resource_path
+image_path = resource_path("zomBits.png")
+passwords_file_path = resource_path("passwords.txt")
 
 # Función para añadir la funcionalidad de almacenamiento de contraseñas
 def add_password():
@@ -11,7 +28,7 @@ def add_password():
     if password and site:
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt()).decode('utf-8') 
         
-        with open("passwords.txt", "a") as file:
+        with open(passwords_file_path, "a") as file:
             file.write(f"Sitio: {site}, Contraseña cifrada: {hashed_password}\n")
         
         messagebox.showinfo("Éxito", f"Contraseña guardada para {site}")
@@ -27,7 +44,7 @@ def verify_password():
 
     if site and input_password:
         try:
-            with open("passwords.txt", "r") as file:
+            with open(passwords_file_path, "r") as file:
                 for line in file:
                     if line.startswith(f"Sitio: {site}"):
                         hashed_password = line.split(", Contraseña cifrada: ")[1].strip()
@@ -45,7 +62,7 @@ def verify_password():
 def load_passwords():
     password_list.delete(0, tk.END)  
     try:
-        with open("passwords.txt", "r") as file:
+        with open(passwords_file_path, "r") as file:
             for line in file:
                 password_list.insert(tk.END, line.strip())
     except FileNotFoundError:
@@ -67,9 +84,9 @@ def delete_password():
     if selected:
         site_info = password_list.get(selected)
         site = site_info.split(",")[0].split(": ")[1]
-        with open("passwords.txt", "r") as file:
+        with open(passwords_file_path, "r") as file:
             lines = file.readlines()
-        with open("passwords.txt", "w") as file:
+        with open(passwords_file_path, "w") as file:
             for line in lines:
                 if not line.startswith(f"Sitio: {site}"):
                     file.write(line)
@@ -97,7 +114,7 @@ frame = tk.Frame(window, bg='#3E3E3E', padx=20, pady=20)
 frame.place(relx=0.5, rely=0.5, anchor="center")
 
 # Cargar imagen
-image = Image.open("./zomBits.png")
+image = Image.open(image_path)
 image = image.resize((100, 100))
 image = round_image(image, 20)
 image = ImageTk.PhotoImage(image)
